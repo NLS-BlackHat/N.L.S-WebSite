@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLS // NoLimits System — NemorisHacking</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #000;
+    --bg: #080808;
+    --bg2: #0f0f0f;
+    --bg3: #161616;
+    --bg4: #1e1e1e;
+    --border: #2a2a2a;
+    --border2: #3a3a3a;
+    --white: #f0f0f0;
+    --gray1: #999;
+    --gray2: #666;
+    --gray3: #444;
+    --green: #00ff41;
+    --green2: #00c832;
+    --green3: #006616;
+    --red: #ff3333;
+    --accent: #c8c8c8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.05) 2px,
+      rgba(0,0,0,0.05) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* GLITCH KEYFRAMES */
+  @keyframes glitch1 {
+    0%,100% { clip-path: inset(0 0 100% 0); transform: translateX(0); }
+    10% { clip-path: inset(10% 0 80% 0); transform: translateX(-4px); }
+    20% { clip-path: inset(30% 0 60% 0); transform: translateX(4px); }
+    30% { clip-path: inset(60% 0 20% 0); transform: translateX(-2px); }
+    40% { clip-path: inset(80% 0 5% 0); transform: translateX(2px); }
+  }
+  @keyframes glitch2 {
+    0%,100% { clip-path: inset(0 0 100% 0); transform: translateX(0); }
+    15% { clip-path: inset(5% 0 85% 0); transform: translateX(5px); }
+    25% { clip-path: inset(40% 0 40% 0); transform: translateX(-5px); }
+    45% { clip-path: inset(70% 0 10% 0); transform: translateX(3px); }
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes fadeInDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes slideInLeft { from{opacity:0;transform:translateX(-40px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes slideInRight { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes typewriter { from{width:0} to{width:100%} }
+  @keyframes scanline {
+    0% { top: -10%; }
+    100% { top: 110%; }
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes countUp { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+  @keyframes borderGlow {
+    0%,100% { border-color: var(--border2); }
+    50% { border-color: var(--gray1); }
+  }
+  @keyframes matrixRain {
+    0% { transform: translateY(-100%); opacity: 1; }
+    100% { transform: translateY(100vh); opacity: 0; }
+  }
+  @keyframes terminalBlink {
+    0%,49%{border-right-color:var(--green)} 50%,100%{border-right-color:transparent}
+  }
+
+  /* MATRIX BG */
+  #matrix-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.03;
+    overflow: hidden;
+    font-size: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    color: #fff;
+  }
+  .matrix-col {
+    position: absolute;
+    top: 0;
+    writing-mode: vertical-rl;
+    animation: matrixRain linear infinite;
+    white-space: nowrap;
+    letter-spacing: 4px;
+  }
+
+  /* LAYOUT */
+  .wrapper { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--black);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar .wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .topbar-left {
+    font-size: 11px;
+    color: var(--gray2);
+    letter-spacing: 2px;
+  }
+  .topbar-left span { color: var(--green); }
+  .topbar-right {
+    display: flex;
+    gap: 20px;
+    font-size: 11px;
+    color: var(--gray2);
+    letter-spacing: 1px;
+  }
+  .topbar-right a { color: var(--gray2); text-decoration: none; transition: color 0.2s; }
+  .topbar-right a:hover { color: var(--white); }
+
+  /* HERO */
+  .hero {
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gray3), transparent);
+    bottom: 0;
+  }
+
+  .hero-terminal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    margin-bottom: 32px;
+    animation: fadeInDown 0.6s ease;
+  }
+  .terminal-bar {
+    background: var(--bg3);
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 4px 4px 0 0;
+  }
+  .terminal-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--gray3);
+  }
+  .terminal-dot.red { background: #3a1a1a; }
+  .terminal-dot.yellow { background: #2a2a1a; }
+  .terminal-dot.green { background: var(--green3); }
+  .terminal-title { color: var(--gray2); font-size: 11px; margin-left: auto; letter-spacing: 1px; }
+  .terminal-body { padding: 20px 24px; font-size: 13px; line-height: 2; }
+  .terminal-line { display: flex; align-items: baseline; gap: 8px; }
+  .prompt { color: var(--green); }
+  .cmd { color: var(--white); }
+  .terminal-output { color: var(--gray1); padding-left: 16px; }
+  .terminal-cursor {
+    display: inline-block;
+    width: 8px; height: 15px;
+    background: var(--green);
+    animation: blink 1s step-end infinite;
+    vertical-align: -2px;
+    margin-left: 2px;
+  }
+
+  .hero-logo {
+    text-align: center;
+    margin-bottom: 16px;
+    animation: fadeIn 0.8s ease 0.3s both;
+  }
+  .logo-main {
+    font-family: 'Orbitron', monospace;
+    font-size: 52px;
+    font-weight: 900;
+    color: var(--white);
+    letter-spacing: 6px;
+    position: relative;
+    display: inline-block;
+  }
+  .logo-main::before, .logo-main::after {
+    content: 'NLS';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+  }
+  .logo-main::before { color: rgba(255,255,255,0.08); animation: glitch1 4s infinite; }
+  .logo-main::after { color: rgba(255,255,255,0.05); animation: glitch2 4s infinite 0.5s; }
+
+  .logo-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 8px;
+    color: var(--gray2);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .logo-sub span { color: var(--gray1); }
+
+  .hero-tagline {
+    text-align: center;
+    font-size: 11px;
+    color: var(--gray2);
+    letter-spacing: 3px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    margin: 24px 0;
+    animation: fadeIn 1s ease 0.6s both;
+  }
+
+  /* NAV */
+  .nav {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 37px;
+    z-index: 99;
+  }
+  .nav .wrapper {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-item {
+    padding: 14px 20px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gray2);
+    text-transform: uppercase;
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+  }
+  .nav-item:hover { color: var(--white); background: var(--bg3); }
+  .nav-item.active { color: var(--white); background: var(--bg3); border-bottom: 2px solid var(--white); }
+
+  /* MAIN GRID */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 0;
+    min-height: 100vh;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  /* FEED */
+  .feed { border-right: 1px solid var(--border); }
+
+  .section-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg2);
+  }
+  .section-header h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--white);
+  }
+  .section-badge {
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    color: var(--gray1);
+    font-size: 10px;
+    padding: 2px 8px;
+    letter-spacing: 1px;
+  }
+
+  /* POST CARD */
+  .post {
+    border-bottom: 1px solid var(--border);
+    padding: 20px;
+    transition: background 0.15s;
+    animation: fadeInUp 0.5s ease both;
+    cursor: pointer;
+  }
+  .post:hover { background: var(--bg2); }
+  .post:nth-child(1) { animation-delay: 0.1s; }
+  .post:nth-child(2) { animation-delay: 0.2s; }
+  .post:nth-child(3) { animation-delay: 0.3s; }
+  .post:nth-child(4) { animation-delay: 0.4s; }
+  .post:nth-child(5) { animation-delay: 0.5s; }
+
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .post-avatar {
+    width: 32px; height: 32px;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--gray1);
+    flex-shrink: 0;
+    font-family: 'Orbitron', monospace;
+  }
+  .post-meta { flex: 1; }
+  .post-author {
+    font-size: 12px;
+    color: var(--white);
+    letter-spacing: 1px;
+  }
+  .post-author span { color: var(--green); }
+  .post-time {
+    font-size: 10px;
+    color: var(--gray2);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .post-category {
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 3px 8px;
+    border: 1px solid var(--border2);
+    color: var(--gray2);
+    text-transform: uppercase;
+  }
+  .post-category.red { border-color: #3a1a1a; color: var(--red); }
+  .post-category.green { border-color: var(--green3); color: var(--green2); }
+  .post-category.white { border-color: var(--border2); color: var(--gray1); }
+
+  .post-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 8px;
+    line-height: 1.3;
+    letter-spacing: 0.5px;
+  }
+  .post-excerpt {
+    font-size: 11px;
+    color: var(--gray1);
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+  .post-footer {
+    display: flex;
+    gap: 20px;
+    font-size: 10px;
+    color: var(--gray2);
+    letter-spacing: 1px;
+    align-items: center;
+  }
+  .post-footer-item { display: flex; gap: 6px; align-items: center; }
+  .post-link {
+    margin-left: auto;
+    color: var(--gray2);
+    text-decoration: none;
+    font-size: 10px;
+    letter-spacing: 1px;
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    transition: all 0.2s;
+  }
+  .post-link:hover { color: var(--white); border-color: var(--gray2); }
+
+  /* SIDEBAR */
+  .sidebar {}
+
+  .sidebar-block {
+    border-bottom: 1px solid var(--border);
+    animation: slideInRight 0.5s ease both;
+  }
+  .sidebar-block:nth-child(1) { animation-delay: 0.2s; }
+  .sidebar-block:nth-child(2) { animation-delay: 0.35s; }
+  .sidebar-block:nth-child(3) { animation-delay: 0.5s; }
+
+  .sidebar-body { padding: 16px 18px; }
+
+  /* PROFILE CARD */
+  .profile-card { padding: 20px 18px; }
+  .profile-avatar-wrap { margin-bottom: 16px; text-align: center; }
+  .profile-avatar {
+    width: 72px; height: 72px;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    position: relative;
+    animation: borderGlow 3s ease infinite;
+  }
+  .profile-avatar::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 1px solid var(--border);
+  }
+  .profile-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+    text-align: center;
+  }
+  .profile-handle {
+    font-size: 10px;
+    color: var(--green);
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .profile-bio {
+    font-size: 10px;
+    color: var(--gray1);
+    line-height: 1.8;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    margin-bottom: 14px;
+  }
+  .profile-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .tag {
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border: 1px solid var(--border2);
+    color: var(--gray2);
+    text-transform: uppercase;
+  }
+  .tag.active { border-color: var(--gray1); color: var(--gray1); }
+
+  .profile-links { display: flex; flex-direction: column; gap: 8px; }
+  .profile-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--gray1);
+    font-size: 10px;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .profile-link:hover { background: var(--bg3); border-color: var(--border2); color: var(--white); }
+  .profile-link-icon { font-size: 12px; color: var(--gray2); width: 16px; text-align: center; }
+
+  /* STATS */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); margin: 0; }
+  .stat-item {
+    background: var(--bg);
+    padding: 16px 14px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 1px;
+    animation: countUp 0.8s ease both;
+  }
+  .stat-label {
+    font-size: 9px;
+    color: var(--gray2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ACHIEVEMENTS */
+  .achievement {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .achievement:last-child { border-bottom: none; }
+  .achievement-icon { color: var(--gray2); font-size: 12px; margin-top: 2px; flex-shrink: 0; }
+  .achievement-title { font-size: 11px; color: var(--white); margin-bottom: 3px; letter-spacing: 0.5px; }
+  .achievement-meta { font-size: 9px; color: var(--gray2); letter-spacing: 1px; }
+
+  /* PRESS FEED */
+  .press-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .press-item:last-child { border-bottom: none; }
+  .press-num { font-size: 11px; color: var(--gray3); width: 18px; flex-shrink: 0; padding-top: 1px; }
+  .press-content { flex: 1; }
+  .press-title { font-size: 11px; color: var(--white); margin-bottom: 4px; line-height: 1.4; text-decoration: none; display: block; }
+  .press-title:hover { color: var(--gray1); }
+  .press-source { font-size: 9px; color: var(--gray2); letter-spacing: 1px; }
+
+  /* MEDIA GRID */
+  .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+  .media-item {
+    background: var(--bg);
+    padding: 12px;
+    text-decoration: none;
+    display: block;
+    transition: background 0.15s;
+  }
+  .media-item:hover { background: var(--bg3); }
+  .media-platform { font-size: 9px; color: var(--gray2); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .media-handle { font-size: 11px; color: var(--white); }
+
+  /* TICKER */
+  .ticker-wrap {
+    background: var(--black);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .ticker {
+    display: flex;
+    gap: 0;
+    white-space: nowrap;
+    animation: ticker 25s linear infinite;
+  }
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .ticker-item {
+    padding: 0 24px;
+    font-size: 10px;
+    color: var(--gray2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .ticker-item span { color: var(--white); }
+  .ticker-sep { color: var(--gray3); }
+
+  /* ALERT BANNER */
+  .alert-banner {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--white);
+    padding: 12px 16px;
+    margin: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    animation: fadeIn 1s ease 0.8s both;
+  }
+  .alert-icon { font-size: 14px; color: var(--gray1); }
+  .alert-text { font-size: 11px; color: var(--gray1); line-height: 1.6; }
+  .alert-text strong { color: var(--white); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    background: var(--black);
+    padding: 30px 0;
+    margin-top: 0;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 24px;
+  }
+  .footer-col-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gray2);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+  .footer-link {
+    display: block;
+    font-size: 11px;
+    color: var(--gray2);
+    text-decoration: none;
+    padding: 4px 0;
+    letter-spacing: 1px;
+    transition: color 0.2s;
+  }
+  .footer-link:hover { color: var(--white); }
+  .footer-bottom {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--gray3);
+    letter-spacing: 1px;
+  }
+  .footer-bottom span { color: var(--gray2); }
+
+  /* STATUS */
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease infinite;
+    margin-right: 6px;
+  }
+
+  /* VECERT BADGE */
+  .vecert-badge {
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    padding: 14px;
+    margin-bottom: 1px;
+    text-align: center;
+  }
+  .vecert-label { font-size: 9px; color: var(--gray2); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+  .vecert-rank {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--white);
+    letter-spacing: 2px;
+  }
+  .vecert-sub { font-size: 10px; color: var(--gray2); letter-spacing: 1px; margin-top: 4px; }
+
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .sidebar { border-top: 1px solid var(--border); }
+    .footer-grid { grid-template-columns: 1fr; }
+    .logo-main { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Matrix Background -->
+<div id="matrix-bg"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="wrapper">
+    <div class="topbar-left">
+      <span>■</span> NLS // NoLimits System — <span>ONLINE</span>
+    </div>
+    <div class="topbar-right">
+      <span><span class="status-dot"></span>ACTIVE</span>
+      <a href="https://t.me/NLS_ChatGeneral" target="_blank">CHAT</a>
+      <a href="https://github.com/NLS-BlackHat" target="_blank">GITHUB</a>
+      <a href="https://t.me/NemorisHacking" target="_blank">CANAL</a>
+    </div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker" id="ticker">
+    <span class="ticker-item"><span>EFE Chile</span> — Acceso no autorizado confirmado <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>ANCI</span> — Investigación ciberataques activa <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>Guatemala</span> — 87% sitios estatales sin seguridad básica <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>VECERT</span> — Threat Actor registrado: NemorisHacking <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>TGR + Clave Única</span> — Vulnerabilidades expuestas <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>NLS NoLimits System</span> — Investigación en ciberseguridad <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>EFE Chile</span> — Acceso no autorizado confirmado <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>ANCI</span> — Investigación ciberataques activa <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>Guatemala</span> — 87% sitios estatales sin seguridad básica <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>VECERT</span> — Threat Actor registrado: NemorisHacking <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>TGR + Clave Única</span> — Vulnerabilidades expuestas <span class="ticker-sep">///</span></span>
+    <span class="ticker-item"><span>NLS NoLimits System</span> — Investigación en ciberseguridad <span class="ticker-sep">///</span></span>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="wrapper">
+    <div class="hero-logo">
+      <div class="logo-main">NLS</div>
+      <div class="logo-sub"><span>No</span>Limits<span>System</span></div>
+    </div>
+    <div class="hero-tagline">// INVESTIGACIÓN EN CIBERSEGURIDAD // DIVULGACIÓN RESPONSABLE // LATINOAMÉRICA //</div>
+    <div class="hero-terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dot red"></div>
+        <div class="terminal-dot yellow"></div>
+        <div class="terminal-dot green"></div>
+        <div class="terminal-title">NLS_TERMINAL v2.6 — SECURE SHELL</div>
+      </div>
+      <div class="terminal-body">
+        <div class="terminal-line"><span class="prompt">root@NLS:~$</span> <span class="cmd">whois NemorisHacking</span></div>
+        <div class="terminal-output">Alias        : NemorisHacking</div>
+        <div class="terminal-output">Org          : NoLimits System (NLS)</div>
+        <div class="terminal-output">Actividad    : Investigación Ciberseguridad, Bug Hunting, Divulgación</div>
+        <div class="terminal-output">Región       : Latinoamérica</div>
+        <div class="terminal-output">Registro     : VECERT Threat Intelligence — Actor indexado</div>
+        <div class="terminal-output">Estado       : <span style="color:var(--green)">ACTIVO</span></div>
+        <br>
+        <div class="terminal-line"><span class="prompt">root@NLS:~$</span> <span class="cmd">cat achievements.txt</span></div>
+        <div class="terminal-output">[ OK ] EFE (Empresa de Ferrocarriles del Estado, Chile) — Sistema comprometido</div>
+        <div class="terminal-output">[ OK ] Múltiples entidades gubernamentales Guatemala — Vulnerabilidades expuestas</div>
+        <div class="terminal-output">[ OK ] TGR + Clave Única Chile — Brechas reportadas</div>
+        <div class="terminal-output">[ OK ] Cobertura: BioBio, Infobae, Prensa Libre, El Mostrador, +12 medios</div>
+        <div class="terminal-line" style="margin-top:8px"><span class="prompt">root@NLS:~$</span> <span class="terminal-cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="wrapper">
+    <a class="nav-item active" href="#">// INICIO</a>
+    <a class="nav-item" href="#">// OPERACIONES</a>
+    <a class="nav-item" href="#">// PRENSA</a>
+    <a class="nav-item" href="#">// PERFIL</a>
+    <a class="nav-item" href="https://t.me/NoLimitsSystem" target="_blank">// CANAL NLS</a>
+    <a class="nav-item" href="https://t.me/NemorisHacking" target="_blank">// CANAL NMR</a>
+    <a class="nav-item" href="https://github.com/NLS-BlackHat" target="_blank">// GITHUB</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="wrapper">
+  <div class="main-grid">
+
+    <!-- FEED -->
+    <main class="feed">
+      <div class="section-header">
+        <h2>// Publicaciones Recientes</h2>
+        <div class="section-badge">LIVE FEED</div>
+        <div class="section-badge" style="margin-left:auto"><span class="status-dot"></span>ACTUALIZADO</div>
+      </div>
+
+      <!-- ALERT -->
+      <div class="alert-banner">
+        <div class="alert-icon">⚠</div>
+        <div class="alert-text"><strong>VECERT ALERT</strong> — NemorisHacking figura como actor de amenaza indexado en la plataforma VECERT Threat Intelligence. Investigación activa en múltiples jurisdicciones.</div>
+      </div>
+
+      <!-- POST 1 -->
+      <div class="post">
+        <div class="post-header">
+          <div class="post-avatar">NMR</div>
+          <div class="post-meta">
+            <div class="post-author"><span>@NemorisHacking</span> — NLS_Root</div>
+            <div class="post-time">01/05/2026 — 23:14 UTC</div>
+          </div>
+          <div class="post-category red">OPERACIÓN</div>
+        </div>
+        <div class="post-title">EFE Chile: Acceso no autorizado a sistema comercial confirmado por la empresa</div>
+        <div class="post-excerpt">
+          La Empresa de Ferrocarriles del Estado (EFE) confirmó un acceso no autorizado a uno de sus sistemas comerciales. La compañía descartó que el incidente comprometa la seguridad operativa ferroviaria. El hallazgo fue reportado por NemorisHacking, investigador de NoLimits System (NLS), quien expuso la brecha de seguridad antes que la empresa tuviera conocimiento del incidente.
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-item">▲ 847</div>
+          <div class="post-footer-item">◈ 124 respuestas</div>
+          <div class="post-footer-item">⟳ 312</div>
+          <a class="post-link" href="https://www.biobiochile.cl/noticias/nacional/chile/2026/05/01/hacker-vulnera-una-plataforma-de-efe-empresa-descarta-que-comprometa-la-seguridad-ferroviaria.shtml" target="_blank">LEER →</a>
+        </div>
+      </div>
+
+      <!-- POST 2 -->
+      <div class="post">
+        <div class="post-header">
+          <div class="post-avatar">NLS</div>
+          <div class="post-meta">
+            <div class="post-author"><span>@NoLimitsSystem</span> — Canal Oficial</div>
+            <div class="post-time">30/04/2026 — 18:42 UTC</div>
+          </div>
+          <div class="post-category red">ALERTA</div>
+        </div>
+        <div class="post-title">Guatemala bajo asedio: ciberataques simultáneos exponen credenciales administrativas del Estado</div>
+        <div class="post-excerpt">
+          Múltiples plataformas oficiales del gobierno de Guatemala fueron vulneradas en una serie de ciberataques coordinados. Credenciales administrativas quedaron expuestas. Infobae y Prensa Libre cubrieron el incidente señalando que el 87% de los sitios del Estado guatemalteco carece de seguridad básica. NLS documentó y reportó las vulnerabilidades.
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-item">▲ 1.2k</div>
+          <div class="post-footer-item">◈ 203 respuestas</div>
+          <div class="post-footer-item">⟳ 578</div>
+          <a class="post-link" href="https://www.infobae.com/guatemala/2026/04/30/continuan-las-alertas-los-ciberataques-simultaneos-vulneran-plataformas-oficiales-y-exponen-credenciales-administrativas-en-guatemala/" target="_blank">LEER →</a>
+        </div>
+      </div>
+
+      <!-- POST 3 -->
+      <div class="post">
+        <div class="post-header">
+          <div class="post-avatar">VCT</div>
+          <div class="post-meta">
+            <div class="post-author"><span>@VECERTRadar</span> — Inteligencia de Amenazas</div>
+            <div class="post-time">01/05/2026 — 09:30 UTC</div>
+          </div>
+          <div class="post-category white">INTELIGENCIA</div>
+        </div>
+        <div class="post-title">VECERT indexa a NemorisHacking como actor de amenaza en su plataforma de análisis</div>
+        <div class="post-excerpt">
+          La plataforma VECERT Threat Intelligence (analyzer.vecert.io) ha indexado al investigador NemorisHacking como actor de amenaza documentado. El perfil incluye actividad registrada en múltiples países de Latinoamérica. VECERT emitió alertas en su canal de Twitter/X sobre las operaciones más recientes del actor.
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-item">▲ 533</div>
+          <div class="post-footer-item">◈ 87 respuestas</div>
+          <div class="post-footer-item">⟳ 201</div>
+          <a class="post-link" href="https://analyzer.vecert.io/actors?search=Nemoris" target="_blank">VER PERFIL →</a>
+        </div>
+      </div>
+
+      <!-- POST 4 -->
+      <div class="post">
+        <div class="post-header">
+          <div class="post-avatar">NMR</div>
+          <div class="post-meta">
+            <div class="post-author"><span>@NemorisHacking</span> — NLS_Root</div>
+            <div class="post-time">28/04/2026 — 14:05 UTC</div>
+          </div>
+          <div class="post-category green">DIVULGACIÓN</div>
+        </div>
+        <div class="post-title">TGR, Clave Única y operadoras — análisis de la superficie de ataque en infraestructura crítica chilena</div>
+        <div class="post-excerpt">
+          El investigador publicó en r/chileIT un análisis sobre múltiples vectores detectados en plataformas críticas chilenas, incluyendo la Tesorería General de la República (TGR), el sistema Clave Única y operadoras de telecomunicaciones. La publicación generó debate en la comunidad de seguridad local.
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-item">▲ 921</div>
+          <div class="post-footer-item">◈ 167 respuestas</div>
+          <div class="post-footer-item">⟳ 344</div>
+          <a class="post-link" href="https://www.reddit.com/r/chileIT/comments/1t0h2rp/ciberataque_tgr_clave_%C3%BAnica_claro_wom/" target="_blank">VER REDDIT →</a>
+        </div>
+      </div>
+
+      <!-- POST 5 -->
+      <div class="post">
+        <div class="post-header">
+          <div class="post-avatar">PL</div>
+          <div class="post-meta">
+            <div class="post-author"><span>@PrensaLibre</span> — Guatemala</div>
+            <div class="post-time">29/04/2026 — 11:20 UTC</div>
+          </div>
+          <div class="post-category red">PRENSA</div>
+        </div>
+        <div class="post-title">La cronología de los hackeos en Guatemala: tres investigadores habrían vulnerado sitios del Estado</div>
+        <div class="post-excerpt">
+          Prensa Libre publicó la cronología detallada de los incidentes de ciberseguridad que afectaron a instituciones del Estado guatemalteco. El reportaje cita a NemorisHacking entre los investigadores que habrían expuesto las vulnerabilidades, documentando el alcance de las brechas detectadas.
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-item">▲ 2.1k</div>
+          <div class="post-footer-item">◈ 389 respuestas</div>
+          <div class="post-footer-item">⟳ 891</div>
+          <a class="post-link" href="https://www.prensalibre.com/guatemala/justicia/la-cronologia-de-los-hackeos-en-guatemala-tres-piratas-informaticos-habrian-vulnerado-sitios-de-instituciones-del-estado/" target="_blank">LEER →</a>
+        </div>
+      </div>
+
+      <!-- POST 6 -->
+      <div class="post">
+        <div class="post-header">
+          <div class="post-avatar">NLS</div>
+          <div class="post-meta">
+            <div class="post-author"><span>@NoLimitsSystem</span> — NLS Comunidad</div>
+            <div class="post-time">25/04/2026 — 20:00 UTC</div>
+          </div>
+          <div class="post-category green">COMUNIDAD</div>
+        </div>
+        <div class="post-title">RutiFail y NemorisJakin — análisis de ruteo y exposición de datos en infraestructura nacional</div>
+        <div class="post-excerpt">
+          Publicación en r/chile sobre el caso RutiFail vinculado a actividad de NemorisJakin. La comunidad de Reddit Chile debatió el alcance del hallazgo, la responsabilidad del reporte y las implicaciones para la seguridad de la infraestructura nacional. El post generó más de 300 comentarios.
+        </div>
+        <div class="post-footer">
+          <div class="post-footer-item">▲ 663</div>
+          <div class="post-footer-item">◈ 312 respuestas</div>
+          <div class="post-footer-item">⟳ 189</div>
+          <a class="post-link" href="https://www.reddit.com/r/chile/comments/1t40vpp/rutifail_y_nemorisjakin/" target="_blank">VER REDDIT →</a>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- PROFILE -->
+      <div class="sidebar-block">
+        <div class="section-header">
+          <h2>// Fundador</h2>
+        </div>
+        <div class="profile-card">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar">NMR</div>
+            <div class="profile-name">NEMORIS</div>
+            <div class="profile-handle">@NemorisHacking</div>
+          </div>
+          <div class="profile-bio">
+            Investigador de ciberseguridad. Fundador de NoLimits System (NLS). Especializado en análisis de superficie de ataque, divulgación responsable y exposición de vulnerabilidades en infraestructura gubernamental latinoamericana.
+          </div>
+          <div class="profile-tags">
+            <span class="tag active">Bug Hunter</span>
+            <span class="tag active">OSINT</span>
+            <span class="tag">RedTeam</span>
+            <span class="tag">LATAM</span>
+            <span class="tag">CVE</span>
+          </div>
+          <div class="profile-links">
+            <a class="profile-link" href="https://github.com/NLS-BlackHat" target="_blank">
+              <span class="profile-link-icon">⌥</span> github.com/NLS-BlackHat
+            </a>
+            <a class="profile-link" href="https://t.me/NLS_NoLimitnsSystem" target="_blank">
+              <span class="profile-link-icon">✈</span> @NLS_NoLimitnsSystem
+            </a>
+            <a class="profile-link" href="https://t.me/NLS_ChatGeneral" target="_blank">
+              <span class="profile-link-icon">◈</span> Chat General NLS
+            </a>
+            <a class="profile-link" href="https://t.me/NoLimitsSystem" target="_blank">
+              <span class="profile-link-icon">▶</span> Canal NoLimitsSystem
+            </a>
+            <a class="profile-link" href="https://t.me/NemorisHacking" target="_blank">
+              <span class="profile-link-icon">▶</span> Canal NemorisHacking
+            </a>
+            <a class="profile-link" href="https://www.sotwe.com/nemorishacking" target="_blank">
+              <span class="profile-link-icon">𝕏</span> NemorisHacking (X)
+            </a>
+            <a class="profile-link" href="https://analyzer.vecert.io/graph_actor?actor=NemorisHacking" target="_blank">
+              <span class="profile-link-icon">◎</span> VECERT Graph Actor
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- VECERT -->
+      <div class="sidebar-block">
+        <div class="vecert-badge">
+          <div class="vecert-label">VECERT Threat Intelligence</div>
+          <div class="vecert-rank">#ACTOR</div>
+          <div class="vecert-sub">NemorisHacking — Indexado</div>
+        </div>
+        <a href="https://analyzer.vecert.io/actors?search=Nemoris" target="_blank" style="display:block;padding:10px 14px;background:var(--bg3);border-top:1px solid var(--border);font-size:10px;color:var(--gray2);letter-spacing:1px;text-decoration:none;text-align:center;transition:background 0.2s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background='var(--bg3)'">
+          VER PERFIL EN VECERT →
+        </a>
+      </div>
+
+      <!-- STATS -->
+      <div class="sidebar-block">
+        <div class="section-header">
+          <h2>// Estadísticas</h2>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-num" id="s1">12+</div>
+            <div class="stat-label">Medios Cubiertos</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="s2">5</div>
+            <div class="stat-label">Países Alcanzados</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="s3">87%</div>
+            <div class="stat-label">Sin Seg. Básica (GT)</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="s4">3+</div>
+            <div class="stat-label">Entidades Críticas</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOGROS -->
+      <div class="sidebar-block">
+        <div class="section-header">
+          <h2>// Logros</h2>
+        </div>
+        <div class="sidebar-body">
+          <div class="achievement">
+            <div class="achievement-icon">■</div>
+            <div>
+              <div class="achievement-title">EFE — Ferrocarriles del Estado Chile</div>
+              <div class="achievement-meta">Acceso no autorizado confirmado // MAY 2026</div>
+            </div>
+          </div>
+          <div class="achievement">
+            <div class="achievement-icon">■</div>
+            <div>
+              <div class="achievement-title">Guatemala — Múltiples entidades del Estado</div>
+              <div class="achievement-meta">Credenciales admin expuestas // ABR 2026</div>
+            </div>
+          </div>
+          <div class="achievement">
+            <div class="achievement-icon">■</div>
+            <div>
+              <div class="achievement-title">TGR + Clave Única + Telecoms Chile</div>
+              <div class="achievement-meta">Vectores de ataque documentados // 2026</div>
+            </div>
+          </div>
+          <div class="achievement">
+            <div class="achievement-icon">■</div>
+            <div>
+              <div class="achievement-title">VECERT — Threat Actor indexado</div>
+              <div class="achievement-meta">analyzer.vecert.io // ACTIVO</div>
+            </div>
+          </div>
+          <div class="achievement">
+            <div class="achievement-icon">■</div>
+            <div>
+              <div class="achievement-title">Cobertura: Infobae, BioBio, Prensa Libre</div>
+              <div class="achievement-meta">12+ medios en 3 países // 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRENSA -->
+      <div class="sidebar-block">
+        <div class="section-header">
+          <h2>// En Prensa</h2>
+        </div>
+        <div class="sidebar-body">
+          <div class="press-item">
+            <div class="press-num">01</div>
+            <div class="press-content">
+              <a class="press-title" href="https://www.biobiochile.cl/noticias/nacional/chile/2026/05/01/hacker-vulnera-una-plataforma-de-efe-empresa-descarta-que-comprometa-la-seguridad-ferroviaria.shtml" target="_blank">Hacker vulnera plataforma de EFE — Chile</a>
+              <div class="press-source">BioBioChile // 01.05.2026</div>
+            </div>
+          </div>
+          <div class="press-item">
+            <div class="press-num">02</div>
+            <div class="press-content">
+              <a class="press-title" href="https://www.infobae.com/guatemala/2026/04/30/continuan-las-alertas-los-ciberataques-simultaneos-vulneran-plataformas-oficiales-y-exponen-credenciales-administrativas-en-guatemala/" target="_blank">Ciberataques simultáneos en Guatemala</a>
+              <div class="press-source">Infobae // 30.04.2026</div>
+            </div>
+          </div>
+          <div class="press-item">
+            <div class="press-num">03</div>
+            <div class="press-content">
+              <a class="press-title" href="https://www.prensalibre.com/guatemala/ciberataques-en-guatemala-87-de-sitios-del-estado-carece-de-seguridad-basica-senala-experto/" target="_blank">87% sitios estatales sin seguridad básica</a>
+              <div class="press-source">Prensa Libre // Guatemala</div>
+            </div>
+          </div>
+          <div class="press-item">
+            <div class="press-num">04</div>
+            <div class="press-content">
+              <a class="press-title" href="https://www.elmostrador.cl/noticias/2026/05/01/anci-anuncia-que-esta-investigando-reportes-de-ciberataque-contra-instituciones-del-estado/" target="_blank">ANCI investiga ciberataques contra el Estado</a>
+              <div class="press-source">El Mostrador // 01.05.2026</div>
+            </div>
+          </div>
+          <div class="press-item">
+            <div class="press-num">05</div>
+            <div class="press-content">
+              <a class="press-title" href="https://www.tiempo21.cl/efe-confirma-acceso-no-autorizado-a-sistema-comercial-y-descarta-riesgo-en-operacion-de-trenes/" target="_blank">EFE confirma acceso no autorizado</a>
+              <div class="press-source">Tiempo21 // Chile</div>
+            </div>
+          </div>
+          <div class="press-item">
+            <div class="press-num">06</div>
+            <div class="press-content">
+              <a class="press-title" href="https://vectorcritico.com/las-claves-de-la-crisis-de-ciberseguridad-en-guatemala/" target="_blank">Las claves de la crisis en Guatemala</a>
+              <div class="press-source">VectorCrítico</div>
+            </div>
+          </div>
+          <div class="press-item">
+            <div class="press-num">07</div>
+            <div class="press-content">
+              <a class="press-title" href="https://urgente.cl/noticia/hacker-vulnera-una-plataforma-de-efe-empresa-descarta-que-comprometa-la-seguridad-ferroviaria" target="_blank">Hacker vulnera plataforma EFE</a>
+              <div class="press-source">Urgente.cl // Chile</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REDES -->
+      <div class="sidebar-block">
+        <div class="section-header">
+          <h2>// Presencia Digital</h2>
+        </div>
+        <div class="media-grid">
+          <a class="media-item" href="https://t.me/NLS_NoLimitnsSystem" target="_blank">
+            <div class="media-platform">Telegram</div>
+            <div class="media-handle">@NLS_NoLimitnsSystem</div>
+          </a>
+          <a class="media-item" href="https://t.me/NLS_ChatGeneral" target="_blank">
+            <div class="media-platform">Chat General</div>
+            <div class="media-handle">NLS Community</div>
+          </a>
+          <a class="media-item" href="https://t.me/NoLimitsSystem" target="_blank">
+            <div class="media-platform">Canal NLS</div>
+            <div class="media-handle">NoLimitsSystem</div>
+          </a>
+          <a class="media-item" href="https://t.me/NemorisHacking" target="_blank">
+            <div class="media-platform">Canal NMR</div>
+            <div class="media-handle">NemorisHacking</div>
+          </a>
+          <a class="media-item" href="https://github.com/NLS-BlackHat" target="_blank">
+            <div class="media-platform">GitHub</div>
+            <div class="media-handle">NLS-BlackHat</div>
+          </a>
+          <a class="media-item" href="https://infosec.exchange/@chum1ng0/114457151064866725" target="_blank">
+            <div class="media-platform">InfoSec.Exchange</div>
+            <div class="media-handle">Mastodon</div>
+          </a>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrapper">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-col-title">// NoLimits System</div>
+        <a class="footer-link" href="https://github.com/NLS-BlackHat" target="_blank">GitHub — NLS-BlackHat</a>
+        <a class="footer-link" href="https://t.me/NoLimitsSystem" target="_blank">Canal Telegram — NoLimitsSystem</a>
+        <a class="footer-link" href="https://t.me/NemorisHacking" target="_blank">Canal Telegram — NemorisHacking</a>
+        <a class="footer-link" href="https://t.me/NLS_ChatGeneral" target="_blank">Chat General — NLS Community</a>
+      </div>
+      <div>
+        <div class="footer-col-title">// Inteligencia</div>
+        <a class="footer-link" href="https://analyzer.vecert.io/actors?search=Nemoris" target="_blank">VECERT — Actor Profile</a>
+        <a class="footer-link" href="https://analyzer.vecert.io/graph_actor?actor=NemorisHacking" target="_blank">VECERT — Graph Actor</a>
+        <a class="footer-link" href="https://www.sotwe.com/nemorishacking" target="_blank">X Profile — NemorisHacking</a>
+        <a class="footer-link" href="https://infosec.exchange/@chum1ng0/114457151064866725" target="_blank">InfoSec.Exchange</a>
+      </div>
+      <div>
+        <div class="footer-col-title">// Cobertura Mediática</div>
+        <a class="footer-link" href="https://www.biobiochile.cl" target="_blank">BioBioChile</a>
+        <a class="footer-link" href="https://www.infobae.com" target="_blank">Infobae</a>
+        <a class="footer-link" href="https://www.prensalibre.com" target="_blank">Prensa Libre</a>
+        <a class="footer-link" href="https://www.elmostrador.cl" target="_blank">El Mostrador</a>
+        <a class="footer-link" href="https://vectorcritico.com" target="_blank">VectorCrítico</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>NLS // NoLimits System — <span>@NemorisHacking</span></span>
+      <span>Investigación en Ciberseguridad // LATAM // 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Matrix rain
+const matrixBg = document.getElementById('matrix-bg');
+const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンABCDEF';
+for (let i = 0; i < 30; i++) {
+  const col = document.createElement('div');
+  col.className = 'matrix-col';
+  col.style.left = (i * 3.5) + '%';
+  col.style.animationDuration = (6 + Math.random() * 14) + 's';
+  col.style.animationDelay = (-Math.random() * 10) + 's';
+  let str = '';
+  for (let j = 0; j < 40; j++) str += chars[Math.floor(Math.random() * chars.length)] + ' ';
+  col.textContent = str;
+  matrixBg.appendChild(col);
+}
+
+// Typing animation
+const outputs = document.querySelectorAll('.terminal-output');
+outputs.forEach((el, i) => {
+  el.style.opacity = '0';
+  setTimeout(() => {
+    el.style.opacity = '1';
+    el.style.transition = 'opacity 0.3s';
+  }, 500 + i * 200);
+});
+</script>
+</body>
+</html>
