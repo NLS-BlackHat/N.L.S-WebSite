@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: nls-website
+    runtime: static
+    repo: https://github.com/nls-blackhat/N.L.S-WebSite
+    branch: main
+    staticPublishPath: ./   # o la carpeta donde está index.html
